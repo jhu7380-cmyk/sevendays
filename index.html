@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>七日問診</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #101014;
+  color: #eeeeee;
+  font-family: sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#game {
+  width: 100%;
+  max-width: 600px;
+  min-height: 100vh;
+  padding: 35px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h1 {
+  text-align: center;
+  letter-spacing: 8px;
+  margin-bottom: 60px;
+}
+
+#speaker {
+  color: #999;
+  margin-bottom: 15px;
+}
+
+#dialogue {
+  font-size: 19px;
+  line-height: 2;
+  min-height: 130px;
+  white-space: pre-wrap;
+}
+
+#choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+button {
+  padding: 16px;
+  background: #25252d;
+  border: 1px solid #555;
+  border-radius: 7px;
+  color: white;
+  font-size: 16px;
+  text-align: left;
+}
+
+button:active {
+  background: #454550;
+}
+
+.center {
+  text-align: center;
+}
+
+.red {
+  background: #850000;
+  color: white;
+}
+
+.hidden {
+  display: none !important;
+}
+</style>
+</head>
+
+<body>
+<div id="game">
+  <h1 id="title">七日問診</h1>
+  <div id="speaker"></div>
+  <div id="dialogue" class="center">
+    你準備好接受問診了嗎？
+  </div>
+  <div id="choices"></div>
+</div>
+
+<script>
+const speaker = document.getElementById("speaker");
+const dialogue = document.getElementById("dialogue");
+const choices = document.getElementById("choices");
+const title = document.getElementById("title");
+const game = document.getElementById("game");
+
+function say(name, text, options) {
+  speaker.textContent = name;
+  dialogue.textContent = text;
+  choices.innerHTML = "";
+
+  options.forEach(option => {
+    const button = document.createElement("button");
+    button.textContent = option.text;
+    button.onclick = option.action;
+    choices.appendChild(button);
+  });
+}
+
+function center(text, next) {
+  speaker.textContent = "";
+  dialogue.className = "center";
+  dialogue.textContent = text;
+  choices.innerHTML = "";
+
+  const button = document.createElement("button");
+  button.textContent = "繼續";
+  button.style.textAlign = "center";
+  button.onclick = next;
+  choices.appendChild(button);
+}
+
+function hiddenWhy(next) {
+  document.body.classList.add("red");
+  game.classList.add("red");
+  speaker.textContent = "";
+  dialogue.textContent = "";
+  choices.innerHTML = "";
+
+  let count = 0;
+  const timer = setInterval(() => {
+    count++;
+    dialogue.textContent += (count > 1 ? "\n" : "") + "為什麼";
+    if (count >= 5) {
+      clearInterval(timer);
+      setTimeout(() => {
+        document.body.classList.remove("red");
+        game.classList.remove("red");
+        next();
+      }, 1000);
+    }
+  }, 200);
+}
+
+function start() {
+  title.classList.remove("hidden");
+  center("序章\n\n你在診療室外睜開眼睛。", () => {
+    center("診療室的門就在你的面前。", doctorStart);
+  });
+}
+
+function doctorStart() {
+  title.classList.add("hidden");
+
+  say("112", "你來了？你遲到了5分鐘，看來你似乎不在意自己的病情。", [
+    {text:"其實我覺得我沒病，我也不是自願要來的", action:() => doctorReply(1)},
+    {text:"沒差，我並不在意", action:() => doctorReply(2)},
+    {text:"（沉默）", action:() => doctorReply(3)}
+  ]);
+}
+
+function doctorReply(choice) {
+  const replies = [
+    "那你離開也可以。既然來了，就好好問診。",
+    "那也會有其他人在意。快點坐下。",
+    "你在磨蹭什麼？快點進來。"
+  ];
+
+  say("112", replies[choice-1], [
+    {text:"繼續", action:doctorAfter}
+  ]);
+}
+
+function doctorAfter() {
+  center("（問診流程略）", () => {
+    say("112", "基於你以上的回答，配藥師正在為你配藥。你等等需要去領藥，知道嗎？", [
+      {text:"知道", action:doctorQuestion},
+      {text:"（沉默）", action:doctorQuestion}
+    ]);
+  });
+}
+
+function doctorQuestion() {
+  say("112", "那你還有什麼問題嗎？", [
+    {text:"你有老婆嗎？", action:() => doctorFinal(1)},
+    {text:"你有家人嗎？", action:() => doctorFinal(2)},
+    {text:"我喜歡你", action:() => hiddenWhy(() => doctorFinal(3))},
+    {text:"（沉默）", action:() => doctorFinal(4)}
+  ]);
+}
+
+function doctorFinal(choice) {
+  if (choice === 1 || choice === 2) {
+    say("112", "不關你的事，快去領藥。", [
+      {text:"前往領藥處", action:pharmacyStart}
+    ]);
+  } else if (choice === 3) {
+    say("112", "……", [
+      {text:"前往領藥處", action:pharmacyStart}
+    ]);
+  } else {
+    say("112", "沒問題可以去領藥了。", [
+      {text:"前往領藥處", action:pharmacyStart}
+    ]);
+  }
+}
+
+function pharmacyStart() {
+  center("（到達領藥處）", () => {
+    say("1026", "歐嗨，歡迎！這次的問診費用有人替你付過了。這裡是你的藥，請問有什麼需要諮詢的嗎？", [
+      {text:"你有老婆嗎？", action:() => pharmacyReply(1)},
+      {text:"你有家人嗎？", action:() => pharmacyReply(2)},
+      {text:"我喜歡你", action:() => hiddenWhy(() => pharmacyReply(3))},
+      {text:"（沉默）", action:() => pharmacyReply(4)},
+      {text:"沒有，謝謝", action:() => pharmacyReply(5)}
+    ]);
+  });
+}
+
+function pharmacyReply(choice) {
+  const replies = {
+    1:"沒有喔。你要當我的愛人嗎？開玩笑的，回去記得好好吃藥。",
+    2:"不好意思，這個問題我不會回答的。",
+    3:"是朋友的喜歡？還是戀人？",
+    4:"記得好好吃藥。",
+    5:"記得好好吃藥。"
+  };
+
+  say("1026", replies[choice], [
+    {text:"繼續", action:dayEnd}
+  ]);
+}
+
+function dayEnd() {
+  say("1026", "下一次回診是三天後，要記得喔～", [
+    {text:"結束第一次問診", action:() => {
+      center("第一次問診結束。\n\n三天後", () => {
+        center("第一天結束。", () => {
+          center("第二次問診尚未開放。", start);
+        });
+      });
+    }}
+  ]);
+}
+
+start();
+</script>
+</body>
+</html>
