@@ -5,26 +5,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>七日問診</title>
+
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
+  padding: 24px 18px;
+  min-height: 100vh;
   background: #080808;
   color: #e8e8e8;
-  font-family: "Noto Serif TC", serif;
-  min-height: 100vh;
+  font-family: "Noto Sans TC", sans-serif;
+}
+
+#app {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+h1 {
+  margin-top: 70px;
+  text-align: center;
+  letter-spacing: 8px;
+  font-size: 30px;
+  font-weight: 400;
+}
+
+.subtitle {
+  text-align: center;
+  color: #777;
+  letter-spacing: 3px;
+  font-size: 12px;
+  margin-bottom: 60px;
 }
 
 button {
-  background: transparent;
-  color: #ddd;
-  border: 1px solid #555;
-  padding: 13px 16px;
   width: 100%;
-  text-align: left;
+  padding: 14px;
+  margin: 7px 0;
+  background: #151515;
+  color: #ddd;
+  border: 1px solid #444;
   font-size: 15px;
-  margin: 6px 0;
+  text-align: left;
   cursor: pointer;
 }
 
@@ -32,33 +57,14 @@ button:active {
   background: #292929;
 }
 
-button:hover {
-  border-color: #aaa;
-}
-
-#app {
-  max-width: 680px;
-  margin: auto;
-  padding: 28px 22px;
-}
-
-#menu {
+.menu-button {
   text-align: center;
-  padding-top: 18vh;
+  letter-spacing: 2px;
 }
 
-h1 {
-  font-size: 32px;
-  letter-spacing: 8px;
-  font-weight: normal;
-  margin-bottom: 12px;
-}
-
-.subtitle {
-  color: #777;
-  font-size: 12px;
-  letter-spacing: 3px;
-  margin-bottom: 65px;
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 #game {
@@ -68,51 +74,82 @@ h1 {
 .topline {
   color: #777;
   font-size: 12px;
+  letter-spacing: 2px;
   border-bottom: 1px solid #333;
   padding-bottom: 12px;
   margin-bottom: 28px;
 }
 
-#history {
-  min-height: 260px;
-  line-height: 2;
-  white-space: pre-wrap;
-}
-
-.line {
-  margin: 0 0 22px;
-}
-
 .speaker {
   color: #aaa;
   font-size: 13px;
-  margin-bottom: 5px;
+  margin-bottom: 12px;
 }
 
-.dialogue {
-  font-size: 16px;
+.prompt {
+  font-size: 18px;
+  line-height: 1.8;
+  margin-bottom: 24px;
 }
 
-#choices {
-  margin-top: 30px;
+.history {
+  border-left: 1px solid #444;
+  padding-left: 14px;
+  margin: 22px 0;
 }
 
-#notice {
+.entry {
+  margin-bottom: 22px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.player {
+  color: #999;
+  font-size: 14px;
+}
+
+.reply {
+  color: #eee;
+  margin-top: 5px;
+}
+
+.choices-title {
   color: #888;
   font-size: 12px;
-  margin-top: 24px;
+  margin: 28px 0 10px;
+}
+
+.controls {
+  border-top: 1px solid #333;
+  margin-top: 30px;
+  padding-top: 18px;
+}
+
+.next {
+  border-color: #777;
   text-align: center;
 }
 
-.red {
-  color: #b40000;
+.end {
+  color: #c77;
+  border-color: #633;
+  text-align: center;
 }
 
 .small {
   color: #666;
   font-size: 12px;
   text-align: center;
-  margin-top: 25px;
+  margin-top: 20px;
+}
+
+.red {
+  color: #b22;
+}
+
+.hidden {
+  display: none;
 }
 </style>
 </head>
@@ -120,205 +157,367 @@ h1 {
 <body>
 <div id="app">
 
-  <section id="menu">
+  <div id="menu">
     <h1>七日問診</h1>
-    <div class="subtitle">SEVEN DAYS</div>
+    <div class="subtitle">SEVEN DAYS · CONSULTATION</div>
 
-    <button onclick="newGame()">開始問診</button>
-    <button onclick="continueGame()">繼續問診</button>
-    <button onclick="showTutorial()">新手教學</button>
-    <button onclick="showSettings()">設定</button>
+    <button class="menu-button" onclick="startGame()">開始問診</button>
+    <button class="menu-button" onclick="continueGame()">繼續問診</button>
+    <button class="menu-button" onclick="showTutorial()">遊戲說明</button>
 
-    <div class="small">請確認你的精神狀態良好。</div>
-  </section>
+    <p class="small">請確認使用同一台裝置與瀏覽器遊玩。</p>
+  </div>
 
-  <section id="game">
-    <div class="topline">
-      <span id="dayLabel">問診紀錄 01 / 07</span>
-      <span style="float:right">112</span>
+  <div id="tutorial" class="hidden">
+    <h2>遊戲說明</h2>
+    <p>1. 點選對話選項，角色會立即回答。</p>
+    <p>2. 已選擇的選項會消失，其他選項可以繼續選擇。</p>
+    <p>3. 不需要回答所有選項，可以隨時前往下一個問題。</p>
+    <p>4. 部分選擇會留下隱藏線索，影響後續劇情。</p>
+    <p>5. 遊戲會自動保存目前進度。</p>
+    <button class="menu-button" onclick="backToMenu()">返回主選單</button>
+  </div>
+
+  <div id="game">
+    <div class="topline" id="topline"></div>
+    <div class="speaker" id="speaker"></div>
+    <div class="prompt" id="prompt"></div>
+
+    <div class="history" id="history"></div>
+
+    <div class="choices-title">你可以選擇：</div>
+    <div id="choices"></div>
+
+    <div class="controls">
+      <button class="next" id="nextButton" onclick="nextPhase()">下一個問題</button>
+      <button class="end" onclick="endConversation()">結束對話</button>
+      <button onclick="backToMenu()">返回主選單</button>
     </div>
 
-    <div id="history"></div>
-    <div id="choices"></div>
-    <div id="notice"></div>
-  </section>
+    <p class="small" id="saveStatus">進度自動保存中</p>
+  </div>
+
+  <div id="ending" class="hidden">
+    <h2>本次問診結束</h2>
+    <p id="endingText"></p>
+    <button class="menu-button" onclick="backToMenu()">返回主選單</button>
+  </div>
 
 </div>
 
 <script>
-const SAVE_KEY = "sevenDays_save_v1";
+const SAVE_KEY = "sevenDaysSave_v2";
 
-let game = {
-  day: 1,
-  history: [],
-  remaining: [],
-  started: false,
-  finished: false
-};
+const phases = [
 
-const firstQuestions = [
-  {
-    question: "知道，有人叫我來的。",
-    answer: "那就省事了。希望你也知道接下來要做什麼。"
-  },
-  {
-    question: "不知道，我只是照著通知過來。",
-    answer: "……通知都看不懂？算了，坐下吧。"
-  },
-  {
-    question: "我不記得了。",
-    answer: "不記得？我們才剛開始，你就給我這種回答。"
-  },
-  {
-    question: "你就是負責替我看診的人？",
-    answer: "至少你還有基本的判斷能力。"
-  },
-  {
-    question: "說實話，我覺得自己根本沒病。",
-    answer: "很好，今天第一個有自信的病人。"
-  },
-  {
-    question: "你猜猜看？",
-    answer: "我沒有時間陪你玩猜謎。"
-  }
-];
+{
+  speaker: "112",
+  prompt: "你知道自己為什麼來這裡嗎？",
+  choices: [
+    {
+      text: "知道，有人叫我來的。",
+      reply: "那就省事了，希望你也知道接下來要做什麼。"
+    },
+    {
+      text: "不知道，我只是照著通知過來。",
+      reply: "……通知都看不懂？算了，坐下吧。"
+    },
+    {
+      text: "我不記得了。",
+      reply: "不記得？我們才剛開始，你就給我這種回答。",
+      flags: ["memoryGap"]
+    },
+    {
+      text: "你就是負責替我看診的人？",
+      reply: "至少你還有基本的判斷能力。"
+    },
+    {
+      text: "說實話，我覺得自己根本沒病。",
+      reply: "很好，今天第一個有自信的病人。"
+    },
+    {
+      text: "你猜猜看？",
+      reply: "我沒有時間陪你玩猜謎。"
+    }
+  ]
+},
 
-function saveGame() {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(game));
+{
+  speaker: "112",
+  prompt: "最近有沒有發生什麼奇怪的事情？",
+  choices: [
+    {
+      text: "一切正常。",
+      reply: "那很好。希望你接下來也能保持這個答案。"
+    },
+    {
+      text: "偶爾會忘記一些事情。",
+      reply: "例如？具體一點，我不會讀心。",
+      flags: ["memoryGap"]
+    },
+    {
+      text: "有，但我不知道怎麼形容。",
+      reply: "不知道怎麼形容，就先不用勉強。慢慢想。"
+    },
+    {
+      text: "你所謂的奇怪是指什麼？",
+      reply: "這個問題應該由你回答我。"
+    },
+    {
+      text: "你先告訴我，你覺得我哪裡奇怪。",
+      reply: "……你很喜歡把問題丟回來？"
+    },
+    {
+      text: "如果我說有，你會相信嗎？",
+      reply: "我會先記錄，再判斷。"
+    }
+  ]
+},
+
+{
+  speaker: "112",
+  prompt: "還有什麼想問的嗎？與問診有沒有關係都可以。",
+  choices: [
+    {
+      text: "你平常都這麼兇嗎？",
+      reply: "你現在才發現？"
+    },
+    {
+      text: "我可以認識你嗎？",
+      reply: "你現在不就是在認識我？"
+    },
+    {
+      text: "你有伴侶嗎？",
+      reply: "私人問題。下一題。"
+    },
+    {
+      text: "我覺得你還挺有趣的。",
+      reply: "你的判斷標準還真隨便。"
+    },
+    {
+      text: "我喜歡你。",
+      reply: "……你是來看診，還是來找聊天對象的？"
+    },
+    {
+      text: "你有家人嗎？",
+      reply: "這和今天的問診有關係嗎？"
+    }
+  ]
+},
+
+{
+  speaker: "1026",
+  prompt: "哎呀！你來啦。藥已經準備好了，今天還順利嗎？",
+  choices: [
+    {
+      text: "今天的藥是什麼？",
+      reply: "就是醫生開的藥呀。詳細內容還是問醫生比較好。"
+    },
+    {
+      text: "藥費是誰付的？",
+      reply: "有人先幫你處理好了，不用擔心。"
+    },
+    {
+      text: "你和112認識很久了嗎？",
+      reply: "算是吧？我們認識很久了。"
+    },
+    {
+      text: "你知道我為什麼來這裡嗎？",
+      reply: "這個嘛……你應該比我更清楚才對。"
+    },
+    {
+      text: "你知道026嗎？",
+      reply: "……026？你在哪裡看到這個數字的？",
+      flags: ["asked026"]
+    },
+    {
+      text: "沒什麼，只是想跟你聊聊。",
+      reply: "哈哈，當然可以！我可不像某位醫生那麼難聊天。"
+    }
+  ]
 }
 
-function newGame() {
-  game = {
-    day: 1,
+];
+
+let state = {};
+
+function newState() {
+  return {
+    phaseIndex: 0,
     history: [],
-    remaining: [],
-    started: true,
+    remaining: phases.map(phase =>
+      phase.choices.map(choice => choice.text)
+    ),
+    flags: {},
     finished: false
   };
+}
 
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    document.getElementById("saveStatus").textContent = "進度已自動保存";
+  } catch (error) {
+    document.getElementById("saveStatus").textContent = "無法保存，請檢查瀏覽器設定";
+  }
+}
+
+function startGame() {
+  state = newState();
   document.getElementById("menu").style.display = "none";
+  document.getElementById("tutorial").classList.add("hidden");
+  document.getElementById("ending").classList.add("hidden");
   document.getElementById("game").style.display = "block";
-
-  game.remaining = [...firstQuestions];
-
-  addLine("112", "你來了？坐吧。");
-  addLine("112", "先說好，我不喜歡重複說明。如果你有問題，就一次問完。");
-  addLine("112", "你知道自己為什麼來這裡嗎？");
-
-  renderChoices();
+  render();
   saveGame();
 }
 
 function continueGame() {
-  const data = localStorage.getItem(SAVE_KEY);
+  const saved = localStorage.getItem(SAVE_KEY);
 
-  if (!data) {
-    alert("目前沒有可讀取的紀錄。");
+  if (!saved) {
+    alert("目前沒有可以繼續的紀錄。");
     return;
   }
 
-  game = JSON.parse(data);
+  try {
+    state = JSON.parse(saved);
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("tutorial").classList.add("hidden");
 
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("game").style.display = "block";
-
-  renderHistory();
-  renderChoices();
-}
-
-function addLine(speaker, message) {
-  game.history.push({ speaker, message });
-  renderHistory();
-}
-
-function renderHistory() {
-  const history = document.getElementById("history");
-  history.innerHTML = "";
-
-  game.history.forEach(item => {
-    const line = document.createElement("div");
-    line.className = "line";
-
-    const speaker = document.createElement("div");
-    speaker.className = "speaker";
-    speaker.textContent = item.speaker;
-
-    const dialogue = document.createElement("div");
-    dialogue.className = "dialogue";
-    dialogue.textContent = item.message;
-
-    line.appendChild(speaker);
-    line.appendChild(dialogue);
-    history.appendChild(line);
-  });
-
-  document.getElementById("dayLabel").textContent =
-    "問診紀錄 " + String(game.day).padStart(2, "0") + " / 07";
-
-  window.scrollTo(0, document.body.scrollHeight);
-}
-
-function renderChoices() {
-  const area = document.getElementById("choices");
-  area.innerHTML = "";
-
-  game.remaining.forEach((item, index) => {
-    const button = document.createElement("button");
-    button.textContent = item.question;
-    button.onclick = () => chooseQuestion(index);
-    area.appendChild(button);
-  });
-
-  if (!game.finished) {
-    const end = document.createElement("button");
-    end.textContent = "結束對話";
-    end.onclick = endConversation;
-    area.appendChild(end);
+    if (state.finished) {
+      showEnding();
+    } else {
+      document.getElementById("ending").classList.add("hidden");
+      document.getElementById("game").style.display = "block";
+      render();
+    }
+  } catch (error) {
+    alert("存檔讀取失敗，可能需要重新開始。");
   }
 }
 
-function chooseQuestion(index) {
-  const item = game.remaining[index];
+function showTutorial() {
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("tutorial").classList.remove("hidden");
+}
 
-  addLine("你", item.question);
-  addLine("112", item.answer);
+function backToMenu() {
+  document.getElementById("game").style.display = "none";
+  document.getElementById("tutorial").classList.add("hidden");
+  document.getElementById("ending").classList.add("hidden");
+  document.getElementById("menu").style.display = "block";
+}
 
-  game.remaining.splice(index, 1);
+function render() {
+  if (state.finished) {
+    showEnding();
+    return;
+  }
 
-  renderChoices();
+  const phase = phases[state.phaseIndex];
+
+  document.getElementById("topline").textContent =
+    "第一天　／　問診紀錄";
+
+  document.getElementById("speaker").textContent =
+    phase.speaker;
+
+  document.getElementById("prompt").textContent =
+    phase.prompt;
+
+  const history = document.getElementById("history");
+  history.innerHTML = "";
+
+  state.history.forEach(item => {
+    const entry = document.createElement("div");
+    entry.className = "entry";
+
+    const player = document.createElement("div");
+    player.className = "player";
+    player.textContent = "你：「" + item.question + "」";
+
+    const reply = document.createElement("div");
+    reply.className = "reply";
+    reply.textContent = item.speaker + "：「" + item.reply + "」";
+
+    entry.appendChild(player);
+    entry.appendChild(reply);
+    history.appendChild(entry);
+  });
+
+  const choices = document.getElementById("choices");
+  choices.innerHTML = "";
+
+  const remaining = state.remaining[state.phaseIndex];
+
+  remaining.forEach(text => {
+    const choice = phase.choices.find(item => item.text === text);
+    if (!choice) return;
+
+    const button = document.createElement("button");
+    button.textContent = choice.text;
+    button.onclick = () => chooseChoice(choice);
+    choices.appendChild(button);
+  });
+
+  const nextButton = document.getElementById("nextButton");
+
+  if (state.phaseIndex >= phases.length - 1) {
+    nextButton.textContent = "完成本次問診";
+  } else {
+    nextButton.textContent = "下一個問題";
+  }
+}
+
+function chooseChoice(choice) {
+  const index = state.phaseIndex;
+
+  state.history.push({
+    speaker: phases[index].speaker,
+    question: choice.text,
+    reply: choice.reply
+  });
+
+  state.remaining[index] =
+    state.remaining[index].filter(text => text !== choice.text);
+
+  if (choice.flags) {
+    choice.flags.forEach(flag => {
+      state.flags[flag] = true;
+    });
+  }
+
   saveGame();
+  render();
+}
+
+function nextPhase() {
+  if (state.phaseIndex >= phases.length - 1) {
+    endConversation();
+    return;
+  }
+
+  state.phaseIndex++;
+  saveGame();
+  render();
 }
 
 function endConversation() {
-  addLine("112", "今天就到這裡吧。");
-
-  game.finished = true;
-  game.remaining = [];
-
-  renderChoices();
-  document.getElementById("notice").textContent =
-    "本次問診紀錄已保存。";
-
+  state.finished = true;
   saveGame();
+  showEnding();
 }
 
-function showTutorial() {
-  alert(
-    "新手教學\n\n" +
-    "1. 點擊對話選項與角色交談。\n" +
-    "2. 已選擇的問題會從選項中消失。\n" +
-    "3. 可以繼續選擇其他問題。\n" +
-    "4. 點擊「結束對話」完成當前對話。\n" +
-    "5. 遊戲會自動保存目前進度。"
-  );
-}
+function showEnding() {
+  document.getElementById("game").style.display = "none";
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("tutorial").classList.add("hidden");
+  document.getElementById("ending").classList.remove("hidden");
 
-function showSettings() {
-  alert(
-    "設定\n\n" +
-    "目前為初始測試版本。\n" +
-    "音量、文字速度及其他設定將於後續版本加入。"
-  );
+  document.getElementById("endingText").textContent =
+    "112：「今天先到這裡。三天後再來。」\n\n" +
+    "1026：「你的藥袋，記得帶好喔！」";
 }
 </script>
 </body>
