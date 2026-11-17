@@ -1,674 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>七日問診</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;padding:24px 18px;min-height:100vh;background:#080808;color:#e8e8e8;font-family:"Noto Sans TC",sans-serif}
-#app{max-width:620px;margin:auto}
-h1{margin-top:70px;text-align:center;letter-spacing:8px;font-size:30px;font-weight:400}
-.subtitle{text-align:center;color:#777;letter-spacing:3px;font-size:12px;margin-bottom:60px}
-button{width:100%;padding:14px;margin:7px 0;background:#151515;color:#ddd;border:1px solid #444;font-size:15px;text-align:left;cursor:pointer}
-button:active{background:#292929}
-.menu-button{text-align:center;letter-spacing:2px}
-.screen{display:none}
-.topline{color:#777;font-size:12px;letter-spacing:2px;border-bottom:1px solid #333;padding-bottom:12px;margin-bottom:28px}
-.speaker{color:#aaa;font-size:13px;margin-bottom:12px}
-.prompt{font-size:18px;line-height:1.8;margin-bottom:24px;white-space:pre-wrap}
-.history{border-left:1px solid #444;padding-left:14px;margin:22px 0}
-.entry{margin-bottom:22px;line-height:1.8;white-space:pre-wrap}
-.player{color:#999;font-size:14px}
-.reply{color:#eee;margin-top:5px}
-.choices-title{color:#888;font-size:12px;margin:28px 0 10px}
-.controls{border-top:1px solid #333;margin-top:30px;padding-top:18px}
-.next{border-color:#777;text-align:center}
-.end{color:#c77;border-color:#633;text-align:center}
-.small{color:#666;font-size:12px;text-align:center;margin-top:20px}
-.setting-row{margin:24px 0;color:#bbb;line-height:2}
-input[type=range]{width:100%;accent-color:#999}
-input[type=checkbox]{accent-color:#999;transform:scale(1.2);margin-right:10px}
-</style>
-</head>
-<body>
-<div id="app">
-
-<div id="menu">
-<h1>七日問診</h1>
-<div class="subtitle">SEVEN DAYS · CONSULTATION</div>
-<button class="menu-button" onclick="startGame()">開始問診</button>
-<button class="menu-button" onclick="continueGame()">繼續問診</button>
-<button class="menu-button" onclick="showScreen('tutorial')">遊戲說明</button>
-<button class="menu-button" onclick="showScreen('settings')">音樂設定</button>
-<p class="small">請確認使用同一台裝置與瀏覽器遊玩。</p>
-</div>
-
-<div id="tutorial" class="screen">
-<h2>遊戲說明</h2>
-<p>1. 點選選項，角色會立即回答。</p>
-<p>2. 已選擇的選項會消失，其他選項可以繼續選擇。</p>
-<p>3. 不需要回答所有選項，可以隨時前往下一階段。</p>
-<p>4. 部分選擇會留下隱藏線索。</p>
-<p>5. 遊戲會自動保存目前進度。</p>
-<button class="menu-button" onclick="backToMenu()">返回主選單</button>
-</div>
-
-<div id="settings" class="screen">
-<h2>音樂設定</h2>
-<div class="setting-row">
-<label><input type="checkbox" id="muteToggle" onchange="toggleMute(this.checked)">關閉背景音樂</label>
-</div>
-<div class="setting-row">
-背景音樂音量
-<input type="range" id="volumeSlider" min="0" max="100" value="75" oninput="changeVolume(this.value)">
-<span id="volumeText">75%</span>
-</div>
-<p class="small">音樂使用程式即時合成。</p>
-<button onclick="testAnomaly()">測試異常音效</button>
-<button class="menu-button" onclick="backToMenu()">返回主選單</button>
-</div>
-
-<div id="game" class="screen">
-<div class="topline" id="topline"></div>
-<div class="speaker" id="speaker"></div>
-<div class="prompt" id="prompt"></div>
-<div class="history" id="history"></div>
-<div class="choices-title">你可以選擇：</div>
-<div id="choices"></div>
-<div class="controls">
-<button class="next" id="nextButton" onclick="nextPhase()">下一個問題</button>
-<button class="end" onclick="endDay()">結束本次問診</button>
-<button onclick="backToMenu()">返回主選單</button>
-</div>
-<p class="small" id="saveStatus">進度自動保存中</p>
-</div>
-
-<div id="dayEnd" class="screen">
-<h2 id="dayEndTitle">問診結束</h2>
-<p id="dayEndText"></p>
-<button class="menu-button" id="dayEndButton" onclick="continueDay()">繼續</button>
-<button onclick="backToMenu()">返回主選單</button>
-</div>
-
-<div id="ending" class="screen">
-<h2>問診紀錄</h2>
-<p>目前已完成第二次問診。</p>
-<p>請等待下一次回診通知。</p>
-<button class="menu-button" onclick="backToMenu()">返回主選單</button>
-</div>
-
-</div>
-
+*{box-sizing:border-box}body{margin:0;padding:24px 18px;min-height:100vh;background:#080808;color:#e8e8e8;font-family:"Noto Sans TC",sans-serif}#app{max-width:620px;margin:auto}h1{margin-top:70px;text-align:center;letter-spacing:8px;font-size:30px;font-weight:400}h2{font-weight:400;letter-spacing:3px}.subtitle{text-align:center;color:#777;letter-spacing:3px;font-size:12px;margin-bottom:60px}button{width:100%;padding:14px;margin:7px 0;background:#151515;color:#ddd;border:1px solid #444;font-size:15px;text-align:left;cursor:pointer;line-height:1.5}button:active{background:#292929}.menu-button{text-align:center;letter-spacing:2px}.screen{display:none}.topline{color:#777;font-size:12px;letter-spacing:2px;border-bottom:1px solid #333;padding-bottom:12px;margin-bottom:28px}.speaker{color:#aaa;font-size:13px;margin-bottom:12px}.prompt{font-size:18px;line-height:1.8;margin-bottom:24px;white-space:pre-wrap}.history{border-left:1px solid #444;padding-left:14px;margin:22px 0}.entry{margin-bottom:18px;line-height:1.8;white-space:pre-wrap}.player{color:#999;font-size:14px}.reply{color:#eee;margin-top:5px}.choices-title{color:#888;font-size:12px;margin:28px 0 10px}.controls{border-top:1px solid #333;margin-top:30px;padding-top:18px}.next{border-color:#777;text-align:center}.end{color:#c77;border-color:#633;text-align:center}.small{color:#666;font-size:12px;text-align:center;margin-top:20px}.setting-row{margin:24px 0;color:#bbb;line-height:2}input[type=range]{width:100%;accent-color:#999}input[type=checkbox]{accent-color:#999;transform:scale(1.2);margin-right:10px}.note{color:#999;line-height:1.8}.red-event{position:fixed;inset:0;background:#050000;color:#b00000;z-index:9;display:none;overflow:hidden;font-family:serif;pointer-events:none}.red-event .words{position:absolute;inset:-5%;font-size:clamp(18px,5vw,48px);line-height:1.2;word-break:break-all;opacity:.9;animation:shake .12s infinite alternate}.red-event.love{background:#000;color:#a00000}.red-event.show{display:block;animation:flash .12s steps(2) 4}@keyframes shake{from{transform:translate(0,0)}to{transform:translate(2px,-2px)}}@keyframes flash{50%{filter:brightness(2)}}.glitch{animation:flicker .22s steps(2) 2}@keyframes flicker{50%{color:#a00;text-shadow:2px 0 #500,-2px 0 #500}}.hidden-top{color:#8a2222;letter-spacing:4px;text-align:center;margin:10px 0 30px}.ending-choice{border-color:#553333}
+</style></head><body><div id="app">
+<div id="menu"><h1>七日問診</h1><div class="subtitle">SEVEN DAYS · CONSULTATION</div><button class="menu-button" onclick="startGame()">開始問診</button><button class="menu-button" onclick="continueGame()">繼續問診</button><button class="menu-button" onclick="showScreen('tutorial')">遊戲說明</button><button class="menu-button" onclick="showScreen('settings')">音樂設定</button><p class="small">請確認使用同一台裝置與瀏覽器遊玩。</p></div>
+<div id="tutorial" class="screen"><h2>遊戲說明</h2><p>1. 點選選項，角色會立即回答。</p><p>2. 已選擇的選項會消失，其他選項可以繼續選擇。</p><p>3. 不需要回答所有選項，可以隨時前往下一階段。</p><p>4. 部分選擇會留下隱藏線索，影響後續對話與結局。</p><p>5. 遊戲會自動保存目前進度。請使用同一台裝置與瀏覽器。</p><p>6. 按「下一個問題」會清除畫面上的上一輪普通對話，但不會刪除問診紀錄。</p><button class="menu-button" onclick="backToMenu()">返回主選單</button></div>
+<div id="settings" class="screen"><h2>音樂設定</h2><div class="setting-row"><label><input type="checkbox" id="muteToggle" onchange="toggleMute(this.checked)">關閉背景音樂</label></div><div class="setting-row">背景音樂音量<input type="range" id="volumeSlider" min="0" max="100" value="75" oninput="changeVolume(this.value)"><span id="volumeText">75%</span></div><p class="small">音樂使用程式即時合成。</p><button onclick="testAnomaly()">測試異常音效</button><button class="menu-button" onclick="backToMenu()">返回主選單</button></div>
+<div id="game" class="screen"><div class="topline" id="topline"></div><div class="speaker" id="speaker"></div><div class="prompt" id="prompt"></div><div class="history" id="history"></div><div class="choices-title">你可以選擇：</div><div id="choices"></div><div class="controls"><button class="next" id="nextButton" onclick="nextPhase()">下一個問題</button><button class="end" onclick="endDay()">結束本次問診</button><button onclick="backToMenu()">返回主選單</button></div><p class="small" id="saveStatus">進度自動保存中</p></div>
+<div id="dayEnd" class="screen"><h2 id="dayEndTitle">問診結束</h2><p id="dayEndText" class="note"></p><button class="menu-button" id="dayEndButton" onclick="continueDay()">繼續</button><button onclick="backToMenu()">返回主選單</button></div>
+<div id="ending" class="screen"><h2>問診紀錄</h2><p id="endingText" class="note"></p><div id="endingChoices"></div><button class="menu-button" onclick="backToMenu()">返回主選單</button></div>
+<div id="hiddenIntro" class="screen"><div class="hidden-top">DAY 08</div><h2>未登記的問診紀錄</h2><p class="note">這份紀錄不在任何一次正式問診的檔案裡。</p><button class="menu-button" onclick="startHiddenDay()">開啟未登記紀錄</button><button onclick="backToMenu()">返回主選單</button></div>
+</div><div id="redEvent" class="red-event"><div class="words" id="redWords"></div></div>
 <script>
+/* 劇情資料：choice = [玩家選項, 角色回答, 可選隱藏旗標] */
+const days=[
+{title:"第一天：初次問診",gap:"",phases:[
+{speaker:"112",prompt:"你知道自己為什麼來這裡嗎？",choices:[["知道，有人叫我來的。","那就省事了，希望你也知道接下來要做什麼。"],["不知道，我只是照著通知過來。","……通知都看不懂？算了，坐下吧。"],["我不記得了。","不記得？我們才剛開始，你就給我這種回答。",["memoryGap"]],["你就是負責替我看診的人？","至少你還有基本的判斷能力。"],["說實話，我覺得自己根本沒病。","很好，今天第一個有自信的病人。"],["你猜猜看？","我沒有時間陪你玩猜謎。"]]},
+{speaker:"112",prompt:"最近有沒有發生什麼奇怪的事情？",choices:[["一切正常。","那很好。希望你接下來也能保持這個答案。"],["偶爾會忘記一些事情。","例如？具體一點，我不會讀心。",["memoryGap"]],["有，但我不知道怎麼形容。","不知道怎麼形容，就先不用勉強。慢慢想。"],["你所謂的奇怪是指什麼？","這個問題應該由你回答我。"],["你先告訴我，你覺得我哪裡奇怪。","……你很喜歡把問題丟回來？"],["如果我說有，你會相信嗎？","我會先記錄，再判斷。"]]},
+{speaker:"112",prompt:"還有什麼想問的嗎？與問診有沒有關係都可以。",choices:[["你平常都這麼兇嗎？","你現在才發現？"],["我可以認識你嗎？","你現在不就是在認識我？"],["你有伴侶嗎？","私人問題。下一題。"],["我覺得你還挺有趣的。","你的判斷標準還真隨便。"],["我喜歡你。","……你是來看診，還是來找聊天對象的？"],["你有家人嗎？","這和今天的問診有關係嗎？"]]},
+{speaker:"1026",prompt:"哎呀！你來啦。藥已經準備好了，今天還順利嗎？",choices:[["今天的藥是什麼？","就是醫生開的藥呀。詳細內容還是問醫生比較好。"],["藥費是誰付的？","有人先幫你處理好了，不用擔心。"],["你和112認識很久了嗎？","算是吧？我們認識很久了。"],["你知道我為什麼來這裡嗎？","這個嘛……你應該比我更清楚才對。"],["你知道026嗎？","……026？你在哪裡看到這個數字的？",["asked026"]],["沒什麼，只是想跟你聊聊。","哈哈，當然可以！我可不像某位醫生那麼難聊天。"]]}]},
+{title:"第二天：既視感",gap:"三天後",phases:[
+{speaker:"112",prompt:"……來了？坐吧。\n\n今天看起來精神不錯。",choices:[["你今天看起來心情不太好。","我的心情不需要列入你的病歷。"],["好久不見。","才三天而已。"],["這裡好像有點熟悉。","診療室都長得差不多。",["familiarRoom"]],["你還記得我嗎？","我有病歷，不需要靠記憶認人。"],["你今天話變少了。","你今天問題倒是很多。"]]},
+{speaker:"112",prompt:"最近有沒有忘記什麼事情？",choices:[["沒有，應該一切正常。","應該？你自己都不確定？"],["偶爾覺得某些事情很熟悉。","既視感不代表事情真的發生過。"],["我好像忘記了一段時間。","……什麼時候的事？",["memoryGap"]],["我不記得自己有沒有忘記。","這個回答倒是挺有意思。",["memoryGap"]],["你上次也問過這個問題。","所以？問題重複，不代表答案也要一樣。"],["你是不是知道我忘了什麼？","我只負責問診，不負責替你回憶。"]]},
+{speaker:"112",prompt:"我調出上次的問診紀錄。你可以看看。",choices:[["這真的是我說的嗎？","紀錄上有你的回答。"],["我完全不記得這件事。","那就先把它記下來。",["memoryGap"]],["這份紀錄是誰寫的？","我。還需要我簽名嗎？"],["你確定紀錄沒有出錯？","你可以懷疑，但請提出理由。"],["我記得的事情和這份紀錄不一樣。","……哪裡不一樣？",["recordMismatch"]],["你想讓我相信這份紀錄？","我沒有要求你相信。"]]},
+{speaker:"1026",prompt:"又見面啦！這次有沒有比上次習慣一點？",choices:[["你還記得我。","當然呀！我記性可沒有那麼差。"],["我覺得這裡很熟悉。","哈哈，可能是你已經開始習慣這裡了吧。",["familiarRoom"]],["我好像忘記了一些事情。","有時候人會記錯事情，也會忘記事情。",["memoryGap"]],["忘記的事情一定不重要嗎？","不一定喔。有些事情，忘了反而更值得注意。",["askedAboutForgetting"]],["112今天有點奇怪。","咦？醫生嗎？可能是最近太忙了吧。"],["你知道我的問診紀錄嗎？","我知道有紀錄，但內容還是問醫生比較好。"]]}]},
+{title:"第三天：重複",gap:"三天後",phases:[
+{speaker:"112",prompt:"坐吧。最近有沒有忘記什麼事情？",choices:[["你又問了一次。","我知道。回答問題就好。"],["你剛剛是不是停頓了？","沒有。你聽錯了。",["noticed112"]],["你剛才問過了。","……我剛才說到哪裡？",["noticed112"]],["你還好嗎？","我很好。不要把時間浪費在這種事情上。"],["你是不是忘記自己問過什麼？","你是醫生，還是我是醫生？"],["我不想回答。","隨你。"]]},
+{speaker:"112",prompt:"……最近的記憶狀況，有沒有變化？",choices:[["和上次差不多。","具體一點。"],["有些事情像是發生過很多次。","重複感不等於重複發生。"],["我開始懷疑自己的記憶。","懷疑可以，但不要急著下結論。",["memoryGap"]],["我比較想知道你的狀況。","今天是誰在接受問診？"],["你剛才是不是又忘詞了？","夠了。……不是說你。",["noticed112"]]]},
+{speaker:"1026",prompt:"歡迎回來！今天要不要先聊點輕鬆的？",choices:[["112剛才好像不太對勁。","咦？醫生怎麼了？可能最近太忙了吧。",["noticed112"]],["他剛才忘記自己說過的話。","哈哈……偶爾也會有這種狀況嘛。"],["你們是不是瞞著我什麼？","哎呀，這個問題可真直接。"],["你今天看起來很有精神。","那當然！藥局可不能愁眉苦臉呀。"],["我想問問藥的事。","可以呀，不過今天先照醫囑來。"],["沒事，想跟你聊聊。","當然好！"]]}]},
+{title:"第四天：檔案",gap:"三天後",phases:[
+{speaker:"112",prompt:"今天先看一下你的問診資料。前三次紀錄都在這裡。",choices:[["為什麼突然給我看紀錄？","只是例行確認。"],["這些紀錄看起來很完整。","它們本來就應該完整。"],["這份資料有些地方看不懂。","看不懂就問，不要自己猜。"],["我可以自己翻嗎？","可以。別弄亂順序。"],["你似乎不太想讓我看。","你想太多了。",["investigated"]],["我想知道自己到底怎麼了。","目前還在觀察。"]]},
+{speaker:"112",prompt:"資料夾底下還有一張沒有標題的文件。",choices:[["患者記憶狀態追蹤？","那是內部文件。"],["記憶連續性：待觀察。","只是追蹤欄位。"],["過往紀錄辨識不穩定是什麼意思？","字面上的意思。"],["這裡為什麼有026？","資料編號。"],["這份文件不是前三次的紀錄。","我知道。放回去。",["recordMismatch","investigated"]],["我想把它帶走。","不行。"]]},
+{speaker:"1026",prompt:"哎呀，今天看起來有不少問題想問呢！",choices:[["你知道這份追蹤文件嗎？","診所裡的文件可多了。"],["026這個編號你熟悉嗎？","……你最近很在意這個數字呢。",["asked026"]],["112不讓我看完整份資料。","醫生有他的考量嘛。"],["你們是不是認識很久了？","這個問題你之前也問過呀。"],["你知道我的記憶出了什麼問題嗎？","我可不能代替醫生回答。"],["我今天不想領藥。","那我幫你確認一下醫囑。"]]}]},
+{title:"第五天：藥袋",gap:"三天後",phases:[
+{speaker:"112",prompt:"先確認一下。最近有按時領取藥物嗎？",choices:[["有，照常領取。","很好。繼續保持。"],["有領，但不確定有沒有用。","效果需要時間觀察。"],["我不記得領過幾次。","藥袋上有紀錄。",["memoryGap"]],["我想知道藥的完整名稱。","依照處方使用即可。"],["這些藥和記憶有關嗎？","目前沒有需要補充的。"],["我不想再領了。","先不要自行更改安排。"]]},
+{speaker:"112",prompt:"你可以看看藥袋上的領取紀錄。",choices:[["這裡寫著05。","嗯。"],["為什麼沒有完整名稱？","內部標示。"],["我記得不是這個數字。","你確定？",["recordMismatch"]],["這個藥袋是我的嗎？","上面有你的資料。"],["我想知道第一次領取的時間。","紀錄裡有。"],["你是不是在迴避問題？","我已經回答了。"]]},
+{speaker:"1026",prompt:"稍等一下喔，我整理一下櫃檯。今天比較忙。",choices:[["這個沒有名字的藥袋是誰的？","其他患者的資料，還沒整理好。"],["為什麼領取次數和紀錄不同？","你看錯了吧？",["recordMismatch"]],["我看到026的標記。","……你在哪裡看到的？",["asked026"]],["你今天很忙嗎？","是呀，今天事情特別多。"],["藥袋上的日期很奇怪。","可能是系統格式。"],["你知道這些藥的用途嗎？","當然知道呀。"]]}]},
+{title:"第六天：配製者",gap:"三天後",phases:[
+{speaker:"112",prompt:"……你來了。把資料放在桌上。\n\n我們今天要確認上次的藥物紀錄。",choices:[["你今天看起來很疲倦。","不需要你操心。"],["你剛才是不是說過同一句話？","沒有。"],["你又忘記自己說到哪裡了。","……夠了。",["noticed112","deepInvestigation"]],["你是不是也在使用那些藥？","這不是今天要談的事。"],["我想找1026談談。","不准。……我不需要他。",["deepInvestigation"]],["你可以慢慢說。","我知道。不要催。"]]},
+{speaker:"112",prompt:"關於藥物，你還有什麼想確認的？",choices:[["這些藥是誰配製的？","藥局會有紀錄。"],["026就是1026嗎？","……你已經問過這個問題。",["asked026","deepInvestigation"]],["他有能力自己配製藥物？","這件事你應該去問他。"],["你早就知道了吧？","我知道的事情比你想像得多。"],["你為什麼不直接告訴我？","因為有些事不是知道就能解決。"],["你是不是害怕我想起來？","……下一題。",["deepInvestigation"]]]},
+{speaker:"1026",prompt:"啊，正好。你來得真巧，我剛好有空。",choices:[["你能自己配製特殊藥物？","嗯，算是我的專長。",["makerKnown"]],["這些藥不是一般藥局會有的吧？","有些人需要的東西，本來就不普通。",["makerKnown"]],["112知道你在做什麼嗎？","當然知道呀。我們可是認識很久了。",["makerKnown"]],["你為什麼要配製這些藥？","原因很多。今天先不聊那麼深。",["makerKnown"]],["你是不是一直在幫他？","……你觀察得比我想像中仔細。",["makerKnown"]],["你看起來一點也不驚訝。","我應該要驚訝嗎？"]]}]},
+{title:"第七天：結案",gap:"三天後",phases:[
+{speaker:"112",prompt:"第七次問診。\n\n……坐吧。今天應該可以把紀錄整理完。",choices:[["終於到最後一次了。","是啊。你似乎很期待。"],["你還記得這是第幾次嗎？","第七次。我有紀錄。"],["你今天看起來不太好。","今天不討論我的狀況。"],["你是不是有話想說？","有。只是還沒想好怎麼說。"],["你還記得我們第一次見面嗎？","……我記得你來過。細節有些模糊。",["askedMemory"]],["我不確定自己還能不能相信你。","這是你的權利。"]]},
+{speaker:"112",prompt:"關於那些藥物，我有件事需要親口告訴你。",choices:[["你一直在使用那些藥物？","我確實有使用那些藥物。"],["不是偶爾，對吧？","……不是偶爾。",["truth112"]],["你已經依賴它們了嗎？","你可以這麼理解。",["truth112"]],["為什麼不早點告訴我？","因為我不想談。"],["1026也知道嗎？","他知道。"],["你不打算解釋原因？","今天還不是全部。",["truth112"]]]},
+{speaker:"1026",prompt:"最後一次啦。真快呢。你今天想先問什麼？",choices:[["你早就知道112的狀況？","嗯，我知道。"],["你們一直在互相隱瞞事情。","有些事情不是不能說，只是時機不對。"],["這些藥和我的記憶有關嗎？","你已經開始接近答案了。",["deepInvestigation"]],["你知道我以前來過這裡嗎？","……你問的是哪一段以前？",["askedMemory"]],["你會記得我嗎？","我當然會記得來過藥局的客人呀。"],["我還有機會再見到你們嗎？","如果你願意，總會有機會。"]]},
+{speaker:"112",prompt:"最後一個問題。你認為自己還需要回來嗎？",choices:[["我想相信你說的。","那就先到這裡。"],["我還是不相信這份紀錄。","我沒有要求你相信。",["recordMismatch"]],["我想知道全部真相。","……我知道。",["deepInvestigation"]],["我不想再回來了。","我不會阻止你。",["leaveClinic"]],["你會記得我嗎？","我不知道。但我會試著記得。",["askedMemory"]],["我想再問一次：我到底是誰？","這個問題……留給你自己找答案。",["deepInvestigation"]]]}]}];
 
-/* =========================
-   劇情資料
-========================= */
-
-const days = [
-
-{
-  title:"第一天：初次問診",
-  gap:"",
-  phases:[
-
-  {
-    speaker:"112",
-    prompt:"你知道自己為什麼來這裡嗎？",
-    choices:[
-      ["知道，有人叫我來的。","那就省事了，希望你也知道接下來要做什麼。"],
-      ["不知道，我只是照著通知過來。","……通知都看不懂？算了，坐下吧。"],
-      ["我不記得了。","不記得？我們才剛開始，你就給我這種回答。",["memoryGap"]],
-      ["你就是負責替我看診的人？","至少你還有基本的判斷能力。"],
-      ["說實話，我覺得自己根本沒病。","很好，今天第一個有自信的病人。"],
-      ["你猜猜看？","我沒有時間陪你玩猜謎。"]
-    ]
-  },
-
-  {
-    speaker:"112",
-    prompt:"最近有沒有發生什麼奇怪的事情？",
-    choices:[
-      ["一切正常。","那很好。希望你接下來也能保持這個答案。"],
-      ["偶爾會忘記一些事情。","例如？具體一點，我不會讀心。",["memoryGap"]],
-      ["有，但我不知道怎麼形容。","不知道怎麼形容，就先不用勉強。慢慢想。"],
-      ["你所謂的奇怪是指什麼？","這個問題應該由你回答我。"],
-      ["你先告訴我，你覺得我哪裡奇怪。","……你很喜歡把問題丟回來？"],
-      ["如果我說有，你會相信嗎？","我會先記錄，再判斷。"]
-    ]
-  },
-
-  {
-    speaker:"112",
-    prompt:"還有什麼想問的嗎？與問診有沒有關係都可以。",
-    choices:[
-      ["你平常都這麼兇嗎？","你現在才發現？"],
-      ["我可以認識你嗎？","你現在不就是在認識我？"],
-      ["你有伴侶嗎？","私人問題。下一題。"],
-      ["我覺得你還挺有趣的。","你的判斷標準還真隨便。"],
-      ["我喜歡你。","……你是來看診，還是來找聊天對象的？"],
-      ["你有家人嗎？","這和今天的問診有關係嗎？"]
-    ]
-  },
-
-  {
-    speaker:"1026",
-    prompt:"哎呀！你來啦。藥已經準備好了，今天還順利嗎？",
-    choices:[
-      ["今天的藥是什麼？","就是醫生開的藥呀。詳細內容還是問醫生比較好。"],
-      ["藥費是誰付的？","有人先幫你處理好了，不用擔心。"],
-      ["你和112認識很久了嗎？","算是吧？我們認識很久了。"],
-      ["你知道我為什麼來這裡嗎？","這個嘛……你應該比我更清楚才對。"],
-      ["你知道026嗎？","……026？你在哪裡看到這個數字的？",["asked026"]],
-      ["沒什麼，只是想跟你聊聊。","哈哈，當然可以！我可不像某位醫生那麼難聊天。"]
-    ]
-  }
-
-  ]
-},
-
-{
-  title:"第二天：既視感",
-  gap:"三天後",
-  phases:[
-
-  {
-    speaker:"112",
-    prompt:"……來了？坐吧。\n\n今天看起來精神不錯。",
-    choices:[
-      ["你今天看起來心情不太好。","我的心情不需要列入你的病歷。"],
-      ["好久不見。","才三天而已。"],
-      ["這裡好像有點熟悉。","診療室都長得差不多。"],
-      ["你還記得我嗎？","我有病歷，不需要靠記憶認人。"],
-      ["你今天話變少了。","你今天問題倒是很多。"]
-    ]
-  },
-
-  {
-    speaker:"112",
-    prompt:"最近有沒有忘記什麼事情？",
-    choices:[
-      ["沒有，應該一切正常。","應該？你自己都不確定？"],
-      ["偶爾覺得某些事情很熟悉。","既視感不代表事情真的發生過。"],
-      ["我好像忘記了一段時間。","……什麼時候的事？"],
-      ["我不記得自己有沒有忘記。","這個回答倒是挺有意思。",["memoryGap"]],
-      ["你上次也問過這個問題。","所以？問題重複，不代表答案也要一樣。"],
-      ["你是不是知道我忘了什麼？","我只負責問診，不負責替你回憶。"]
-    ]
-  },
-
-  {
-    speaker:"112",
-    prompt:"我調出上次的問診紀錄。你可以看看。",
-    choices:[
-      ["這真的是我說的嗎？","紀錄上有你的回答。"],
-      ["我完全不記得這件事。","那就先把它記下來。"],
-      ["這份紀錄是誰寫的？","我。還需要我簽名嗎？"],
-      ["你確定紀錄沒有出錯？","你可以懷疑，但請提出理由。"],
-      ["我記得的事情和這份紀錄不一樣。","……哪裡不一樣？",["recordMismatch"]],
-      ["你想讓我相信這份紀錄？","我沒有要求你相信。"]
-    ]
-  },
-
-  {
-    speaker:"1026",
-    prompt:"又見面啦！這次有沒有比上次習慣一點？",
-    choices:[
-      ["你還記得我。","當然呀！我記性可沒有那麼差。"],
-      ["我覺得這裡很熟悉。","哈哈，可能是你已經開始習慣這裡了吧。"],
-      ["我好像忘記了一些事情。","有時候人會記錯事情，也會忘記事情。"],
-      ["忘記的事情一定不重要嗎？","不一定喔。有些事情，忘了反而更值得注意。",["askedAboutForgetting"]],
-      ["112今天有點奇怪。","咦？醫生嗎？可能是最近太忙了吧。"],
-      ["你知道我的問診紀錄嗎？","我知道有紀錄，但內容還是問醫生比較好。"]
-    ]
-  }
-
-  ]
-}
-
+const hiddenPhases=[
+{speaker:"系統紀錄",prompt:"實驗相關人員資料\n姓名：未確認\n編號：未確認\n參與紀錄：存在\n記憶狀態：無法確認\n備註：本人尚未得知相關事實。",choices:[["這份資料是在說我？","沒有任何欄位能證明這件事。",["hiddenRecord"]],["我參與過什麼？","紀錄缺頁。"],["為什麼沒有人告訴我？","本人尚未得知相關事實。"],["我要看完整資料。","存取權限不足。",["hiddenRecord"]]]},
+{speaker:"112",prompt:"……你看到了？\n\n我還以為這份資料早就被處理掉了。",choices:[["你知道這份紀錄？","我知道一部分。"],["我也是實驗相關人員？","我不能替這份資料下結論。"],["你早就知道我會來？","我知道你會回來，但不是每次都記得。"],["你到底隱瞞了多少？","比我願意承認的多。"],["把你知道的全部告訴我。","有些部分，我也沒有完整答案。",["truth112"]]]},
+{speaker:"1026",prompt:"……原來你真的找到這裡了。\n\n這次我不會再說只是編號。",choices:[["026就是你？","是。這個編號確實和我有關。",["hiddenRecord"]],["那些藥是為了什麼？","它們和記憶紀錄有關，但我不能把缺失的部分說成事實。"],["你們都認識我？","我們知道你的資料，不代表我們知道你的一切。"],["我想知道完整真相。","那就把所有紀錄放在一起看吧。",["deepInvestigation"]]]},
+{speaker:"紀錄",prompt:"最後一頁的內容並不完整。\n\n你可以選擇相信、拒絕，或把未知留在未知。",choices:[["接受目前能確認的事實。","紀錄已保存。",["acceptTruth"]],["拒絕替自己下結論。","紀錄已保存。",["refuseTruth"]],["我還要繼續找。","未完成的檔案仍然存在。",["deepInvestigation"]]]}
 ];
 
-
-/* =========================
-   遊戲狀態與存檔
-========================= */
-
-const SAVE_KEY="sevenDaysSave_v4";
-const SETTINGS_KEY="sevenDaysAudioSettings";
-
-let state={};
-
-function newState(){
-  return {
-    dayIndex:0,
-    phaseIndex:0,
-    history:[],
-    remaining:days.map(day=>day.phases.map(phase=>phase.choices.map(c=>c[0]))),
-    flags:{},
-    finished:false,
-    dayFinished:false
-  };
-}
-
-function saveGame(){
-  try{
-    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
-    const status=document.getElementById("saveStatus");
-    if(status) status.textContent="進度已自動保存";
-  }catch(e){}
-}
-
-
-/* =========================
-   音樂系統
-========================= */
-
-let audioContext=null;
-let masterGain=null;
-let ambienceGain=null;
-let oscillators=[];
-let noiseGain=null;
-let noiseSource=null;
-let musicStarted=false;
-let isMuted=false;
-let musicVolume=0.75;
-let currentScene="menu";
-let anomalyTimer=null;
-
-function loadAudioSettings(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(SETTINGS_KEY));
-    if(saved){
-      isMuted=!!saved.muted;
-      musicVolume=Math.max(0,Math.min(1,saved.volume));
-    }
-  }catch(e){}
-  updateSettingsUI();
-}
-
-function saveAudioSettings(){
-  localStorage.setItem(SETTINGS_KEY,JSON.stringify({
-    muted:isMuted,
-    volume:musicVolume
-  }));
-}
-
-function updateSettingsUI(){
-  const toggle=document.getElementById("muteToggle");
-  const slider=document.getElementById("volumeSlider");
-  const text=document.getElementById("volumeText");
-  if(toggle)toggle.checked=isMuted;
-  if(slider)slider.value=Math.round(musicVolume*100);
-  if(text)text.textContent=Math.round(musicVolume*100)+"%";
-}
-
-function startAudio(){
-  const AudioClass=window.AudioContext||window.webkitAudioContext;
-  if(!AudioClass)return;
-
-  if(!audioContext){
-    audioContext=new AudioClass();
-    masterGain=audioContext.createGain();
-    ambienceGain=audioContext.createGain();
-
-    ambienceGain.connect(masterGain);
-    masterGain.connect(audioContext.destination);
-
-    masterGain.gain.value=isMuted?0:musicVolume;
-    ambienceGain.gain.value=0;
-
-    createAmbientSound();
-  }
-
-  if(audioContext.state==="suspended")audioContext.resume();
-
-  musicStarted=true;
-  setScene(currentScene);
-}
-
-function createAmbientSound(){
-  const frequencies=[55,82.4,110];
-
-  frequencies.forEach((frequency,index)=>{
-    const oscillator=audioContext.createOscillator();
-    const gain=audioContext.createGain();
-
-    oscillator.type=index===1?"triangle":"sine";
-    oscillator.frequency.value=frequency;
-
-    // 提高音量，讓低頻環境音更容易聽見
-    gain.gain.value=[0.38,0.18,0.10][index];
-
-    oscillator.connect(gain);
-    gain.connect(ambienceGain);
-    oscillator.start();
-
-    oscillators.push({oscillator,gain});
-  });
-
-  const size=audioContext.sampleRate*2;
-  const buffer=audioContext.createBuffer(1,size,audioContext.sampleRate);
-  const data=buffer.getChannelData(0);
-
-  for(let i=0;i<size;i++){
-    data[i]=(Math.random()*2-1)*0.22;
-  }
-
-  noiseSource=audioContext.createBufferSource();
-  noiseSource.buffer=buffer;
-  noiseSource.loop=true;
-
-  const filter=audioContext.createBiquadFilter();
-  filter.type="lowpass";
-  filter.frequency.value=170;
-
-  noiseGain=audioContext.createGain();
-  noiseGain.gain.value=0.09;
-
-  noiseSource.connect(filter);
-  filter.connect(noiseGain);
-  noiseGain.connect(ambienceGain);
-  noiseSource.start();
-}
-
-function setScene(scene){
-  currentScene=scene;
-  if(!musicStarted||!audioContext)return;
-
-  const settings={
-    menu:{freq:[45,67,90],noise:0.045},
-    consultation:{freq:[55,82.4,110],noise:0.09},
-    pharmacy:{freq:[65.4,98,130.8],noise:0.065}
-  };
-
-  const s=settings[scene]||settings.consultation;
-  const now=audioContext.currentTime;
-
-  oscillators.forEach((item,index)=>{
-    item.oscillator.frequency.setTargetAtTime(s.freq[index],now,1.2);
-  });
-
-  noiseGain.gain.setTargetAtTime(s.noise,now,1.5);
-  ambienceGain.gain.setTargetAtTime(1,now,1.5);
-}
-
-function toggleMute(value){
-  isMuted=value;
-  saveAudioSettings();
-  updateSettingsUI();
-
-  if(masterGain){
-    masterGain.gain.setTargetAtTime(
-      isMuted?0:musicVolume,
-      audioContext.currentTime,0.15
-    );
-  }
-}
-
-function changeVolume(value){
-  musicVolume=Number(value)/100;
-  document.getElementById("volumeText").textContent=value+"%";
-
-  if(masterGain&&!isMuted){
-    masterGain.gain.setTargetAtTime(
-      musicVolume,audioContext.currentTime,0.1
-    );
-  }
-  saveAudioSettings();
-}
-
-function triggerAnomalyAudio(){
-  if(!musicStarted||!audioContext)return;
-
-  if(anomalyTimer)clearTimeout(anomalyTimer);
-
-  const now=audioContext.currentTime;
-  ambienceGain.gain.cancelScheduledValues(now);
-  ambienceGain.gain.setTargetAtTime(0,now,0.035);
-
-  const tone=audioContext.createOscillator();
-  const gain=audioContext.createGain();
-
-  tone.type="sine";
-  tone.frequency.value=440;
-  gain.gain.setValueAtTime(0.0001,now);
-  gain.gain.linearRampToValueAtTime(0.025,now+0.08);
-  gain.gain.exponentialRampToValueAtTime(0.0001,now+0.8);
-
-  tone.connect(gain);
-  gain.connect(masterGain);
-  tone.start(now);
-  tone.stop(now+0.85);
-
-  anomalyTimer=setTimeout(()=>{
-    if(audioContext&&ambienceGain){
-      ambienceGain.gain.setTargetAtTime(1,audioContext.currentTime,1.2);
-    }
-  },1700);
-}
-
-function testAnomaly(){
-  startAudio();
-  triggerAnomalyAudio();
-}
-
-window.triggerAnomalyAudio=triggerAnomalyAudio;
-window.setGameMusic=setScene;
-
-
-/* =========================
-   畫面控制
-========================= */
-
-function hideAllScreens(){
-  document.querySelectorAll(".screen").forEach(el=>el.style.display="none");
-  document.getElementById("menu").style.display="none";
-}
-
-function showScreen(id){
-  hideAllScreens();
-  document.getElementById(id).style.display="block";
-}
-
-function backToMenu(){
-  hideAllScreens();
-  document.getElementById("menu").style.display="block";
-  setScene("menu");
-}
-
-
-/* =========================
-   開始與繼續
-========================= */
-
-function startGame(){
-  startAudio();
-  state=newState();
-  showScreen("game");
-  render();
-  saveGame();
-}
-
-function continueGame(){
-  startAudio();
-  const saved=localStorage.getItem(SAVE_KEY);
-
-  if(!saved){
-    alert("目前沒有可以繼續的紀錄。");
-    return;
-  }
-
-  try{
-    state=JSON.parse(saved);
-
-    if(!state.remaining||state.dayIndex<0||state.dayIndex>=days.length){
-      throw new Error("存檔格式錯誤");
-    }
-
-    if(state.finished){
-      showScreen("ending");
-    }else if(state.dayFinished){
-      showDayEnd();
-    }else{
-      showScreen("game");
-      render();
-    }
-  }catch(e){
-    alert("存檔讀取失敗，請重新開始。");
-  }
-}
-
-
-/* =========================
-   對話系統
-========================= */
-
-function render(){
-  if(state.finished){
-    showScreen("ending");
-    return;
-  }
-
-  const day=days[state.dayIndex];
-  const phase=day.phases[state.phaseIndex];
-
-  document.getElementById("topline").textContent=
-    day.title+"　／　問診紀錄";
-
-  document.getElementById("speaker").textContent=phase.speaker;
-  document.getElementById("prompt").textContent=phase.prompt;
-
-  setScene(phase.speaker==="1026"?"pharmacy":"consultation");
-
-  const history=document.getElementById("history");
-  history.innerHTML="";
-
-  state.history.forEach(item=>{
-    if(item.dayIndex!==state.dayIndex)return;
-
-    const entry=document.createElement("div");
-    entry.className="entry";
-
-    const player=document.createElement("div");
-    player.className="player";
-    player.textContent="你：「"+item.question+"」";
-
-    const reply=document.createElement("div");
-    reply.className="reply";
-    reply.textContent=item.speaker+"：「"+item.reply+"」";
-
-    entry.appendChild(player);
-    entry.appendChild(reply);
-    history.appendChild(entry);
-  });
-
-  const choices=document.getElementById("choices");
-  choices.innerHTML="";
-
-  const remaining=state.remaining[state.dayIndex][state.phaseIndex];
-
-  remaining.forEach(text=>{
-    const choice=phase.choices.find(c=>c[0]===text);
-    if(!choice)return;
-
-    const button=document.createElement("button");
-    button.textContent=choice[0];
-    button.onclick=()=>chooseChoice(choice);
-    choices.appendChild(button);
-  });
-
-  document.getElementById("nextButton").textContent=
-    state.phaseIndex===day.phases.length-1
-    ?"完成本次問診":"下一個問題";
-}
-
-function chooseChoice(choice){
-  const day=days[state.dayIndex];
-
-  state.history.push({
-    dayIndex:state.dayIndex,
-    speaker:day.phases[state.phaseIndex].speaker,
-    question:choice[0],
-    reply:choice[1]
-  });
-
-  state.remaining[state.dayIndex][state.phaseIndex]=
-    state.remaining[state.dayIndex][state.phaseIndex]
-      .filter(text=>text!==choice[0]);
-
-  if(choice[2]){
-    choice[2].forEach(flag=>state.flags[flag]=true);
-  }
-
-  saveGame();
-  render();
-}
-
-function nextPhase(){
-  const day=days[state.dayIndex];
-
-  if(state.phaseIndex>=day.phases.length-1){
-    endDay();
-    return;
-  }
-
-  state.phaseIndex++;
-  saveGame();
-  render();
-}
-
-
-/* =========================
-   問診結束與下一次回診
-========================= */
-
-function endDay(){
-  state.dayFinished=true;
-  saveGame();
-  showDayEnd();
-}
-
-function showDayEnd(){
-  showScreen("dayEnd");
-
-  const isFirst=state.dayIndex===0;
-
-  document.getElementById("dayEndTitle").textContent=
-    isFirst?"第一次問診結束":"第二次問診結束";
-
-  document.getElementById("dayEndText").textContent=
-    isFirst
-    ?"112：「今天先到這裡。三天後再來。」\n\n1026：「你的藥袋，記得帶好喔！」"
-    :"112：「今天的問診就到這裡。」\n\n1026：「下次見啦！」";
-
-  document.getElementById("dayEndButton").textContent=
-    isFirst?"三天後，繼續回診":"返回問診紀錄";
-}
-
-function continueDay(){
-  if(state.dayIndex===0){
-    state.dayIndex=1;
-    state.phaseIndex=0;
-    state.dayFinished=false;
-    saveGame();
-    showScreen("game");
-    render();
-  }else{
-    state.finished=true;
-    saveGame();
-    showScreen("ending");
-  }
-}
-
-
-/* =========================
-   初始化
-========================= */
-
+const SAVE_KEY="sevenDaysSave_v5",SETTINGS_KEY="sevenDaysAudioSettings";let state={};
+function freshState(){return{dayIndex:0,phaseIndex:0,history:[],remaining:days.map(d=>d.phases.map(p=>p.choices.map(c=>c[0]))),flags:{},finished:false,dayFinished:false,hidden:false,hiddenEnding:null};}
+function saveGame(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));let s=document.getElementById('saveStatus');if(s)s.textContent='進度已自動保存';}catch(e){}}
+function migrateSave(old){let n=freshState();Object.assign(n,old);n.flags=old.flags||{};n.history=old.history||[];n.remaining=n.remaining||[];days.forEach((d,di)=>d.phases.forEach((p,pi)=>{if(!n.remaining[di])n.remaining[di]=[];if(!Array.isArray(n.remaining[di][pi]))n.remaining[di][pi]=p.choices.map(c=>c[0]);}));n.hidden=!!old.hidden;n.dayIndex=Math.min(n.dayIndex||0,days.length-1);return n;}
+function showScreen(id){document.querySelectorAll('.screen').forEach(x=>x.style.display='none');document.getElementById('menu').style.display='none';document.getElementById(id).style.display='block';}
+function backToMenu(){document.querySelectorAll('.screen').forEach(x=>x.style.display='none');document.getElementById('menu').style.display='block';setScene('menu');}
+function startGame(){startAudio();state=freshState();showScreen('game');render();saveGame();}
+function continueGame(){startAudio();let raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem('sevenDaysSave_v4');if(!raw){alert('目前沒有可以繼續的紀錄。');return;}try{state=migrateSave(JSON.parse(raw));if(state.finished){showEnding();}else if(state.dayFinished){showDayEnd();}else{showScreen('game');render();}}catch(e){alert('存檔讀取失敗，請重新開始。');}}
+function currentPhases(){return state.hidden?hiddenPhases:days[state.dayIndex].phases;}
+function render(){if(state.finished){showEnding();return;}let phases=currentPhases(),phase=phases[state.phaseIndex];if(!phase){endDay();return;}document.getElementById('topline').textContent=(state.hidden?'第八天：未登記紀錄':days[state.dayIndex].title)+'　／　問診紀錄';document.getElementById('speaker').textContent=phase.speaker;document.getElementById('prompt').textContent=phase.prompt;setScene(phase.speaker==='1026'?'pharmacy':'consultation');let h=document.getElementById('history');h.innerHTML='';let last=state.history.filter(x=>x.dayIndex===state.dayIndex&&x.phaseIndex===state.phaseIndex&&!!x.hidden===!!state.hidden).slice(-1);last.forEach(item=>{let e=document.createElement('div');e.className='entry';let p=document.createElement('div');p.className='player';p.textContent='你：「'+item.question+'」';let r=document.createElement('div');r.className='reply';r.textContent=item.speaker+'：「'+item.reply+'」';e.append(p,r);h.append(e);});let choices=document.getElementById('choices');choices.innerHTML='';let key=state.hidden?state.hiddenRemaining:state.remaining[state.dayIndex][state.phaseIndex];if(!key){key=phase.choices.map(c=>c[0]);if(state.hidden)state.hiddenRemaining=key;}key.forEach(t=>{let c=phase.choices.find(x=>x[0]===t);if(!c)return;let b=document.createElement('button');b.textContent=c[0];b.onclick=()=>chooseChoice(c);choices.append(b);});document.getElementById('nextButton').textContent=state.phaseIndex===phases.length-1?'完成本次問診':'下一個問題';}
+function chooseChoice(c){let phase=currentPhases()[state.phaseIndex];state.history.push({dayIndex:state.dayIndex,phaseIndex:state.phaseIndex,hidden:!!state.hidden,speaker:phase.speaker,question:c[0],reply:c[1]});let key=state.hidden?state.hiddenRemaining:state.remaining[state.dayIndex][state.phaseIndex];if(key)key.splice(key.indexOf(c[0]),1);(c[2]||[]).forEach(f=>state.flags[f]=true);if(c[0]==='我喜歡你')state.flags.saidLike=true;saveGame();render();if(state.dayIndex===1&&state.phaseIndex===3&&state.flags.saidLike&&state.flags.askedAboutForgetting&&Math.random()<0.4)triggerTextEvent('love');else if((c[2]||[]).includes('deepInvestigation')&&Math.random()<0.22)triggerTextEvent('why');}
+function nextPhase(){let phases=currentPhases();if(state.phaseIndex>=phases.length-1){endDay();return;}state.phaseIndex++;saveGame();render();}
+function endDay(){state.dayFinished=true;saveGame();showDayEnd();}
+function showDayEnd(){showScreen('dayEnd');let title=document.getElementById('dayEndTitle'),txt=document.getElementById('dayEndText'),btn=document.getElementById('dayEndButton');if(state.hidden){title.textContent='未登記紀錄結束';txt.textContent='這份紀錄沒有正式結案。\n\n你已經知道了一些事，但空白仍然存在。';btn.textContent='查看隱藏結局';}else{title.textContent=days[state.dayIndex].title+'｜問診結束';txt.textContent=state.dayIndex===0?'112：「今天先到這裡。三天後再來。」\n\n1026：「你的藥袋，記得帶好喔！」':state.dayIndex===6?'112：「問診到此結束。至於其他問題……」\n\n1026：「今天辛苦啦。要不要再看看你留下的紀錄？」':'112：「今天的問診就到這裡。三天後再來。」\n\n1026：「下次見啦！」';btn.textContent=state.dayIndex===6?'完成問診':'三天後，繼續回診';}}
+function continueDay(){state.dayFinished=false;if(state.hidden){state.finished=true;showEnding();saveGame();return;}if(state.dayIndex<6){state.dayIndex++;state.phaseIndex=0;showScreen('game');render();saveGame();}else{state.finished=true;saveGame();showEnding();}}
+function showEnding(){showScreen('ending');let f=state.flags,deep=!!(f.deepInvestigation&&f.makerKnown),unlocked=!!(deep&&f.truth112&&f.recordMismatch),full=!!(unlocked&&f.hiddenRecord);let text='',choices=document.getElementById('endingChoices');choices.innerHTML='';if(state.hidden){text=full&&f.acceptTruth?'完整紀錄：你把能確認的線索拼在一起。仍有空白，但你終於知道自己並非單純的患者。':f.refuseTruth?'拒絕確認：你選擇不替未知的過去下結論。':'記錄之外：你找到了一部分答案，卻仍有缺頁。';}else if(f.leaveClinic){text='不再回診：你決定離開診所。門在身後關上，紀錄仍留在桌上。';}else if(unlocked){text='未結案：你已經找到足以開啟另一份紀錄的線索。正式問診結束，但事情還沒有結束。';}else if(f.truth112&&f.makerKnown){text='不完整的答案：你知道112確實使用那些藥物，也知道1026能配製特殊藥物，但原因仍未完整揭露。';}else if(f.recordMismatch||f.memoryGap){text='遺失紀錄：你開始懷疑自己的記憶，也發現紀錄有無法解釋的地方。';}else{text='正常結案：七次問診已完成。診所替你留下最後一份紀錄。';}document.getElementById('endingText').textContent=text;if(!state.hidden&&unlocked){let b=document.createElement('button');b.className='ending-choice';b.textContent='查看第八天：未登記的問診紀錄';b.onclick=()=>{state.hidden=true;state.dayFinished=false;state.phaseIndex=0;state.hiddenRemaining=hiddenPhases[0].choices.map(c=>c[0]);showScreen('hiddenIntro');saveGame();};choices.append(b);}let historyBtn=document.createElement('button');historyBtn.textContent='查看已保存的問診紀錄（文字）';historyBtn.onclick=showHistory;choices.append(historyBtn);}
+function showHistory(){let lines=state.history.map(x=>(x.hidden?'第八天':days[x.dayIndex]?.title||'問診')+'｜'+x.speaker+'\n你：'+x.question+'\n'+x.speaker+'：'+x.reply).join('\n\n');alert(lines||'目前沒有問診紀錄。');}
+function startHiddenDay(){state.hidden=true;state.dayFinished=false;state.phaseIndex=0;state.hiddenRemaining=hiddenPhases[0].choices.map(c=>c[0]);showScreen('game');render();saveGame();}
+function triggerTextEvent(type){let layer=document.getElementById('redEvent'),words=document.getElementById('redWords');layer.className='red-event show'+(type==='love'?' love':'');let phrase=type==='love'?'我愛你　':'為什麼　';words.textContent=Array(160).fill(phrase).join('　');if(type==='love')triggerAnomalyAudio();else triggerAnomalyAudio();setTimeout(()=>{layer.className='red-event';words.textContent='';},type==='love'?1700:1100);}
+/* 音樂系統：程式即時合成，不需外部音檔 */
+let audioContext=null,masterGain=null,ambienceGain=null,oscillators=[],noiseGain=null,noiseSource=null,musicStarted=false,isMuted=false,musicVolume=.75,currentScene='menu',anomalyTimer=null;
+function loadAudioSettings(){try{let s=JSON.parse(localStorage.getItem(SETTINGS_KEY));if(s){isMuted=!!s.muted;musicVolume=Math.max(0,Math.min(1,Number(s.volume)));}}catch(e){}updateSettingsUI();}
+function saveAudioSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify({muted:isMuted,volume:musicVolume}));}
+function updateSettingsUI(){let a=document.getElementById('muteToggle'),b=document.getElementById('volumeSlider'),c=document.getElementById('volumeText');if(a)a.checked=isMuted;if(b)b.value=Math.round(musicVolume*100);if(c)c.textContent=Math.round(musicVolume*100)+'%';}
+function startAudio(){let AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioContext){audioContext=new AC();masterGain=audioContext.createGain();ambienceGain=audioContext.createGain();ambienceGain.connect(masterGain);masterGain.connect(audioContext.destination);masterGain.gain.value=isMuted?0:musicVolume;ambienceGain.gain.value=0;createAmbientSound();}if(audioContext.state==='suspended')audioContext.resume();musicStarted=true;setScene(currentScene);}
+function createAmbientSound(){[55,82.4,110].forEach((f,i)=>{let o=audioContext.createOscillator(),g=audioContext.createGain();o.type=i===1?'triangle':'sine';o.frequency.value=f;g.gain.value=[.38,.18,.1][i];o.connect(g);g.connect(ambienceGain);o.start();oscillators.push({oscillator:o,gain:g});});let size=audioContext.sampleRate*2,buf=audioContext.createBuffer(1,size,audioContext.sampleRate),d=buf.getChannelData(0);for(let i=0;i<size;i++)d[i]=(Math.random()*2-1)*.22;noiseSource=audioContext.createBufferSource();noiseSource.buffer=buf;noiseSource.loop=true;let filter=audioContext.createBiquadFilter();filter.type='lowpass';filter.frequency.value=170;noiseGain=audioContext.createGain();noiseGain.gain.value=.09;noiseSource.connect(filter);filter.connect(noiseGain);noiseGain.connect(ambienceGain);noiseSource.start();}
+function setScene(scene){currentScene=scene;if(!musicStarted||!audioContext)return;let s=({menu:{freq:[45,67,90],noise:.045},consultation:{freq:[55,82.4,110],noise:.09},pharmacy:{freq:[65.4,98,130.8],noise:.065}})[scene]||{freq:[55,82.4,110],noise:.09};let now=audioContext.currentTime;oscillators.forEach((x,i)=>x.oscillator.frequency.setTargetAtTime(s.freq[i],now,1.2));noiseGain.gain.setTargetAtTime(s.noise,now,1.5);ambienceGain.gain.setTargetAtTime(1,now,1.5);}
+function toggleMute(v){isMuted=v;saveAudioSettings();updateSettingsUI();if(masterGain)masterGain.gain.setTargetAtTime(v?0:musicVolume,audioContext.currentTime,.15);}
+function changeVolume(v){musicVolume=Number(v)/100;document.getElementById('volumeText').textContent=v+'%';if(masterGain&&!isMuted)masterGain.gain.setTargetAtTime(musicVolume,audioContext.currentTime,.1);saveAudioSettings();}
+function triggerAnomalyAudio(){if(!musicStarted||!audioContext)return;if(anomalyTimer)clearTimeout(anomalyTimer);let now=audioContext.currentTime;ambienceGain.gain.cancelScheduledValues(now);ambienceGain.gain.setTargetAtTime(0,now,.035);let o=audioContext.createOscillator(),g=audioContext.createGain();o.frequency.value=440;g.gain.setValueAtTime(.0001,now);g.gain.linearRampToValueAtTime(.025,now+.08);g.gain.exponentialRampToValueAtTime(.0001,now+.8);o.connect(g);g.connect(masterGain);o.start(now);o.stop(now+.85);anomalyTimer=setTimeout(()=>{if(audioContext&&ambienceGain)ambienceGain.gain.setTargetAtTime(1,audioContext.currentTime,1.2);},1700);}
+function testAnomaly(){startAudio();triggerTextEvent('why');}
 loadAudioSettings();
-
-</script>
-</body>
-</html>
+</script></body></html>
