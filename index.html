@@ -7,9 +7,7 @@
 <title>七日問診</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -53,21 +51,14 @@ button {
   cursor: pointer;
 }
 
-button:active {
-  background: #292929;
-}
+button:active { background: #292929; }
 
 .menu-button {
   text-align: center;
   letter-spacing: 2px;
 }
 
-button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-#game {
+#game, #tutorial, #settings, #ending {
   display: none;
 }
 
@@ -144,13 +135,23 @@ button:disabled {
   margin-top: 20px;
 }
 
-.red {
-  color: #b22;
+.setting-row {
+  margin: 24px 0;
+  color: #bbb;
+  line-height: 2;
 }
 
-.hidden {
-  display: none;
+input[type="range"] {
+  width: 100%;
+  accent-color: #999;
 }
+
+input[type="checkbox"] {
+  accent-color: #999;
+  transform: scale(1.2);
+  margin-right: 10px;
+}
+
 </style>
 </head>
 
@@ -164,17 +165,44 @@ button:disabled {
     <button class="menu-button" onclick="startGame()">開始問診</button>
     <button class="menu-button" onclick="continueGame()">繼續問診</button>
     <button class="menu-button" onclick="showTutorial()">遊戲說明</button>
+    <button class="menu-button" onclick="showSettings()">音樂設定</button>
 
     <p class="small">請確認使用同一台裝置與瀏覽器遊玩。</p>
   </div>
 
-  <div id="tutorial" class="hidden">
+  <div id="tutorial">
     <h2>遊戲說明</h2>
     <p>1. 點選對話選項，角色會立即回答。</p>
     <p>2. 已選擇的選項會消失，其他選項可以繼續選擇。</p>
     <p>3. 不需要回答所有選項，可以隨時前往下一個問題。</p>
     <p>4. 部分選擇會留下隱藏線索，影響後續劇情。</p>
     <p>5. 遊戲會自動保存目前進度。</p>
+    <button class="menu-button" onclick="backToMenu()">返回主選單</button>
+  </div>
+
+  <div id="settings">
+    <h2>音樂設定</h2>
+
+    <div class="setting-row">
+      <label>
+        <input type="checkbox" id="muteToggle" onchange="toggleMute(this.checked)">
+        關閉背景音樂
+      </label>
+    </div>
+
+    <div class="setting-row">
+      背景音樂音量
+      <input type="range" id="volumeSlider"
+        min="0" max="100" value="35"
+        oninput="changeVolume(this.value)">
+      <span id="volumeText">35%</span>
+    </div>
+
+    <p class="small">
+      第一次播放需要先點擊遊戲中的按鈕。
+    </p>
+
+    <button onclick="testAnomaly()">測試異常音效</button>
     <button class="menu-button" onclick="backToMenu()">返回主選單</button>
   </div>
 
@@ -197,7 +225,7 @@ button:disabled {
     <p class="small" id="saveStatus">進度自動保存中</p>
   </div>
 
-  <div id="ending" class="hidden">
+  <div id="ending">
     <h2>本次問診結束</h2>
     <p id="endingText"></p>
     <button class="menu-button" onclick="backToMenu()">返回主選單</button>
@@ -206,7 +234,10 @@ button:disabled {
 </div>
 
 <script>
-const SAVE_KEY = "sevenDaysSave_v2";
+
+/* =========================
+   對話資料
+========================= */
 
 const phases = [
 
@@ -339,6 +370,14 @@ const phases = [
 
 ];
 
+
+/* =========================
+   遊戲存檔
+========================= */
+
+const SAVE_KEY = "sevenDaysSave_v3";
+const SETTINGS_KEY = "sevenDaysAudioSettings";
+
 let state = {};
 
 function newState() {
@@ -356,23 +395,295 @@ function newState() {
 function saveGame() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-    document.getElementById("saveStatus").textContent = "進度已自動保存";
+    const status = document.getElementById("saveStatus");
+    if (status) status.textContent = "進度已自動保存";
   } catch (error) {
-    document.getElementById("saveStatus").textContent = "無法保存，請檢查瀏覽器設定";
+    const status = document.getElementById("saveStatus");
+    if (status) status.textContent = "無法保存，請檢查瀏覽器設定";
   }
 }
 
+
+/* =========================
+   原創背景音樂系統
+========================= */
+
+let audioContext = null;
+let masterGain = null;
+let ambienceGain = null;
+let oscillators = [];
+let noiseSource = null;
+let noiseGain = null;
+
+let musicStarted = false;
+let isMuted = false;
+let musicVolume = 0.35;
+let currentScene = "menu";
+
+function loadAudioSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+
+    if (saved) {
+      isMuted = !!saved.muted;
+      musicVolume = Math.max(0, Math.min(1, saved.volume));
+    }
+  } catch (error) {}
+  
+  updateSettingsUI();
+}
+
+function saveAudioSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+    muted: isMuted,
+    volume: musicVolume
+  }));
+}
+
+function updateSettingsUI() {
+  const toggle = document.getElementById("muteToggle");
+  const slider = document.getElementById("volumeSlider");
+  const text = document.getElementById("volumeText");
+
+  if (toggle) toggle.checked = isMuted;
+  if (slider) slider.value = Math.round(musicVolume * 100);
+  if (text) text.textContent = Math.round(musicVolume * 100) + "%";
+}
+
+function startAudio() {
+  const AudioClass = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioClass) {
+    alert("這個瀏覽器目前不支援背景音樂。");
+    return;
+  }
+
+  if (!audioContext) {
+    audioContext = new AudioClass();
+
+    masterGain = audioContext.createGain();
+    ambienceGain = audioContext.createGain();
+
+    ambienceGain.connect(masterGain);
+    masterGain.connect(audioContext.destination);
+
+    masterGain.gain.value = isMuted ? 0 : musicVolume;
+    ambienceGain.gain.value = 0;
+
+    createAmbientSound();
+  }
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume();
+  }
+
+  musicStarted = true;
+  setScene(currentScene);
+}
+
+function createAmbientSound() {
+  const now = audioContext.currentTime;
+
+  const frequencies = [55, 82.4, 110];
+
+  frequencies.forEach((frequency, index) => {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = index === 1 ? "triangle" : "sine";
+    oscillator.frequency.value = frequency;
+    gain.gain.value = [0.13, 0.045, 0.025][index];
+
+    oscillator.connect(gain);
+    gain.connect(ambienceGain);
+    oscillator.start(now);
+
+    oscillators.push({ oscillator, gain });
+  });
+
+  // 輕微、柔和的底噪
+  const bufferSize = audioContext.sampleRate * 2;
+  const buffer = audioContext.createBuffer(
+    1,
+    bufferSize,
+    audioContext.sampleRate
+  );
+
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * 0.25;
+  }
+
+  noiseSource = audioContext.createBufferSource();
+  noiseSource.buffer = buffer;
+  noiseSource.loop = true;
+
+  const filter = audioContext.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 170;
+
+  noiseGain = audioContext.createGain();
+  noiseGain.gain.value = 0.035;
+
+  noiseSource.connect(filter);
+  filter.connect(noiseGain);
+  noiseGain.connect(ambienceGain);
+
+  noiseSource.start();
+}
+
+function setScene(scene) {
+  currentScene = scene;
+
+  if (!musicStarted || !audioContext) return;
+
+  const settings = {
+    menu: {
+      frequencies: [45, 67, 90],
+      noise: 0.018
+    },
+    consultation: {
+      frequencies: [55, 82.4, 110],
+      noise: 0.035
+    },
+    pharmacy: {
+      frequencies: [65.4, 98, 130.8],
+      noise: 0.025
+    }
+  };
+
+  const selected = settings[scene] || settings.consultation;
+  const now = audioContext.currentTime;
+
+  oscillators.forEach((item, index) => {
+    item.oscillator.frequency.setTargetAtTime(
+      selected.frequencies[index],
+      now,
+      1.2
+    );
+  });
+
+  noiseGain.gain.setTargetAtTime(
+    selected.noise,
+    now,
+    1.5
+  );
+
+  ambienceGain.gain.cancelScheduledValues(now);
+  ambienceGain.gain.setTargetAtTime(1, now, 1.5);
+}
+
+function toggleMute(value) {
+  isMuted = value;
+  saveAudioSettings();
+  updateSettingsUI();
+
+  if (audioContext && masterGain) {
+    const now = audioContext.currentTime;
+    masterGain.gain.setTargetAtTime(
+      isMuted ? 0 : musicVolume,
+      now,
+      0.15
+    );
+  }
+}
+
+function changeVolume(value) {
+  musicVolume = Number(value) / 100;
+
+  const text = document.getElementById("volumeText");
+  if (text) text.textContent = value + "%";
+
+  if (audioContext && masterGain && !isMuted) {
+    masterGain.gain.setTargetAtTime(
+      musicVolume,
+      audioContext.currentTime,
+      0.1
+    );
+  }
+
+  saveAudioSettings();
+}
+
+function testAnomaly() {
+  startAudio();
+  triggerAnomalyAudio();
+}
+
+// 特殊事件：背景音突然中斷，再慢慢恢復
+function triggerAnomalyAudio() {
+  if (!musicStarted || !audioContext) return;
+
+  const now = audioContext.currentTime;
+
+  ambienceGain.gain.cancelScheduledValues(now);
+  ambienceGain.gain.setTargetAtTime(0, now, 0.035);
+
+  // 很輕的異常音，不使用刺耳的突然巨響
+  const tone1 = audioContext.createOscillator();
+  const tone2 = audioContext.createOscillator();
+  const toneGain = audioContext.createGain();
+
+  tone1.type = "sine";
+  tone2.type = "sine";
+
+  tone1.frequency.value = 440;
+  tone2.frequency.value = 447;
+
+  toneGain.gain.setValueAtTime(0.0001, now);
+  toneGain.gain.linearRampToValueAtTime(0.025, now + 0.08);
+  toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+
+  tone1.connect(toneGain);
+  tone2.connect(toneGain);
+  toneGain.connect(masterGain);
+
+  tone1.start(now);
+  tone2.start(now);
+  tone1.stop(now + 0.85);
+  tone2.stop(now + 0.85);
+
+  setTimeout(() => {
+    if (!audioContext || !ambienceGain) return;
+
+    const time = audioContext.currentTime;
+    ambienceGain.gain.cancelScheduledValues(time);
+    ambienceGain.gain.setTargetAtTime(1, time, 1.2);
+  }, 1700);
+}
+
+// 讓之後的劇情可以呼叫這個功能
+window.triggerAnomalyAudio = triggerAnomalyAudio;
+window.setGameMusic = setScene;
+
+
+/* =========================
+   畫面切換
+========================= */
+
+function hideAllScreens() {
+  ["menu", "tutorial", "settings", "game", "ending"]
+    .forEach(id => {
+      document.getElementById(id).style.display = "none";
+    });
+}
+
 function startGame() {
+  startAudio();
+
   state = newState();
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("tutorial").classList.add("hidden");
-  document.getElementById("ending").classList.add("hidden");
+
+  hideAllScreens();
   document.getElementById("game").style.display = "block";
+
   render();
   saveGame();
 }
 
 function continueGame() {
+  startAudio();
+
   const saved = localStorage.getItem(SAVE_KEY);
 
   if (!saved) {
@@ -382,32 +693,49 @@ function continueGame() {
 
   try {
     state = JSON.parse(saved);
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("tutorial").classList.add("hidden");
+
+    if (!Array.isArray(state.history) ||
+        !Array.isArray(state.remaining) ||
+        state.remaining.length !== phases.length ||
+        state.phaseIndex < 0 ||
+        state.phaseIndex >= phases.length) {
+      throw new Error("存檔格式不符");
+    }
+
+    hideAllScreens();
 
     if (state.finished) {
       showEnding();
     } else {
-      document.getElementById("ending").classList.add("hidden");
       document.getElementById("game").style.display = "block";
       render();
     }
   } catch (error) {
-    alert("存檔讀取失敗，可能需要重新開始。");
+    alert("存檔讀取失敗，請重新開始。");
   }
 }
 
 function showTutorial() {
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("tutorial").classList.remove("hidden");
+  hideAllScreens();
+  document.getElementById("tutorial").style.display = "block";
+}
+
+function showSettings() {
+  hideAllScreens();
+  document.getElementById("settings").style.display = "block";
+  updateSettingsUI();
 }
 
 function backToMenu() {
-  document.getElementById("game").style.display = "none";
-  document.getElementById("tutorial").classList.add("hidden");
-  document.getElementById("ending").classList.add("hidden");
+  hideAllScreens();
   document.getElementById("menu").style.display = "block";
+  setScene("menu");
 }
+
+
+/* =========================
+   對話系統
+========================= */
 
 function render() {
   if (state.finished) {
@@ -425,6 +753,13 @@ function render() {
 
   document.getElementById("prompt").textContent =
     phase.prompt;
+
+  // 進入1026藥局時切換音樂
+  if (phase.speaker === "1026") {
+    setScene("pharmacy");
+  } else {
+    setScene("consultation");
+  }
 
   const history = document.getElementById("history");
   history.innerHTML = "";
@@ -463,11 +798,10 @@ function render() {
 
   const nextButton = document.getElementById("nextButton");
 
-  if (state.phaseIndex >= phases.length - 1) {
-    nextButton.textContent = "完成本次問診";
-  } else {
-    nextButton.textContent = "下一個問題";
-  }
+  nextButton.textContent =
+    state.phaseIndex >= phases.length - 1
+      ? "完成本次問診"
+      : "下一個問題";
 }
 
 function chooseChoice(choice) {
@@ -510,15 +844,21 @@ function endConversation() {
 }
 
 function showEnding() {
-  document.getElementById("game").style.display = "none";
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("tutorial").classList.add("hidden");
-  document.getElementById("ending").classList.remove("hidden");
+  hideAllScreens();
+  document.getElementById("ending").style.display = "block";
 
   document.getElementById("endingText").textContent =
     "112：「今天先到這裡。三天後再來。」\n\n" +
     "1026：「你的藥袋，記得帶好喔！」";
 }
+
+
+/* =========================
+   初始化
+========================= */
+
+loadAudioSettings();
+
 </script>
 </body>
 </html>
